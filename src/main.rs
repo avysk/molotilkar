@@ -2,6 +2,8 @@ use std;
 
 use clap::Parser;
 use log::debug;
+use rand;
+use rand_distr::{Distribution, Normal};
 use simple_logger;
 use sysinfo::{CpuExt, CpuRefreshKind, RefreshKind, System, SystemExt};
 
@@ -125,15 +127,24 @@ fn main() {
     );
     let mut sys =
         System::new_with_specifics(RefreshKind::new().with_cpu(CpuRefreshKind::everything()));
+    let cpus = sys.cpus().len();
+    debug!("Found {cpus} CPUs in the system.");
+    let normal = Normal::new(cli.load.0, cli.deviation.0)
+        .expect("Failed to create normal distribution source");
+    let normal_percent = || Percent(normal.sample(&mut rand::thread_rng())).clamp();
     loop {
-        debug!("Sleeping for {} milliseconds.", cli.time_period);
-        std::thread::sleep(std::time::Duration::from_millis(cli.time_period));
-        sys.refresh_cpu();
-        let current_load = Percent(sys.global_cpu_info().cpu_usage());
-        debug!("Current system load is {current_load}.");
-        if cli.load - cli.epsilon <= current_load && current_load <= cli.load + cli.epsilon {
-            debug!("Doing nothing.");
-            continue;
+        let willing = normal_percent();
+        debug!("Willing to get {willing} load.");
+        loop {
+            debug!("Sleeping for {} milliseconds.", cli.time_period);
+            std::thread::sleep(std::time::Duration::from_millis(cli.time_period));
+            sys.refresh_cpu();
+            let current_load = Percent(sys.global_cpu_info().cpu_usage());
+            debug!("Current system load is {current_load}.");
+            if willing - cli.epsilon <= current_load && current_load <= willing + cli.epsilon {
+                debug!("Desired load reached.");
+                break;
+            }
         }
     }
 }
