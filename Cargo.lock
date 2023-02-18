@@ -278,6 +278,7 @@ version = "1.0.0"
 dependencies = [
  "clap",
  "log",
+ "rand",
  "rand_distr",
  "simple_logger",
  "sysinfo",
