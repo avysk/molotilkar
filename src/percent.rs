@@ -33,6 +33,9 @@ impl Percent {
             self.clone()
         }
     }
+    pub fn decimal(self) -> f32 {
+        self.0 / 100.0
+    }
 }
 
 fn f32_representation(s: &str) -> Result<f32, String> {

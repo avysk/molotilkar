@@ -1,3 +1,5 @@
+mod message;
+mod molotilka;
 mod percent;
 
 use clap::Parser;
