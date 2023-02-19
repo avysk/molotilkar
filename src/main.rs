@@ -1,4 +1,4 @@
-use std;
+mod percent;
 
 use clap::Parser;
 use log::debug;
@@ -7,38 +7,7 @@ use rand_distr::{Distribution, Normal};
 use simple_logger;
 use sysinfo::{CpuExt, CpuRefreshKind, RefreshKind, System, SystemExt};
 
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
-struct Percent(f32);
-impl std::ops::Add for Percent {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self {
-        Self(self.0 + other.0)
-    }
-}
-impl std::ops::Sub for Percent {
-    type Output = Self;
-
-    fn sub(self, other: Self) -> Self {
-        Self(self.0 - other.0)
-    }
-}
-impl std::fmt::Display for Percent {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}%", self.0)
-    }
-}
-impl Percent {
-    fn clamp(self) -> Self {
-        if self < Percent(0.0) {
-            Percent(0.0)
-        } else if self > Percent(100.0) {
-            Percent(100.0)
-        } else {
-            self.clone()
-        }
-    }
-}
+use percent::{non_negative_percent, strictly_positive_percent, Percent};
 
 fn init_logger(verbose: bool) {
     if verbose {
@@ -48,34 +17,6 @@ fn init_logger(verbose: bool) {
     } else {
         let _ = simple_logger::init_with_level(log::Level::Info)
             .expect("Logger initialization failed.");
-    }
-}
-
-fn f32_representation(s: &str) -> Result<f32, String> {
-    let fs = s.trim_end_matches('%');
-    let res: f32 = fs
-        .parse()
-        .map_err(|_| format!("Cannot parse {s} as 32-bit float."))?;
-    Ok(res)
-}
-
-fn strictly_positive_percent(s: &str) -> Result<Percent, String> {
-    let f = f32_representation(s)?;
-    if f <= 0.0 || f > 100.0 {
-        Err(format!(
-            "'{f}' must be strictly positiive and no more than 100.0."
-        ))
-    } else {
-        Ok(Percent(f))
-    }
-}
-
-fn non_negative_percent(s: &str) -> Result<Percent, String> {
-    let f = f32_representation(s)?;
-    if f < 0.0 {
-        Err(format!("'{f}' cannot be negative."))
-    } else {
-        Ok(Percent(f))
     }
 }
 
