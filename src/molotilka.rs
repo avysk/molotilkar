@@ -1,3 +1,5 @@
+mod useless;
+
 use std::sync::mpsc::{Receiver, TryRecvError};
 
 use log::debug;
@@ -37,7 +39,7 @@ pub fn start(num: u64, rx: Receiver<Message>) {
                         }
                     }
                     let start_t = std::time::Instant::now();
-                    // do the job
+                    useless::work(num);
                     let elapsed = start_t.elapsed().as_secs_f32();
                     let decimal_p = p.decimal();
                     let sleeping_time = elapsed * (1.0 - decimal_p) / decimal_p;
