@@ -6,7 +6,7 @@ use log::debug;
 
 use crate::{message::Message, percent::Percent};
 
-pub fn start(num: u64, rx: Receiver<Message>) {
+pub fn start(num: usize, rx: Receiver<Message>) {
     debug!("WORKER {}: Created.", num);
     let res = rx.recv();
     let msg = res.expect("CHannel was closed before the thread managed to start.");
@@ -17,13 +17,15 @@ pub fn start(num: u64, rx: Receiver<Message>) {
 
     debug!("WORKER {}: Waiting for load message", num);
     let got = rx.recv();
+    debug!("WORKER {0}: Got new message {1:?}.", num, got);
     if got.is_ok() {
         let mut load = got.unwrap();
         loop {
             match load {
                 Message::Load(p) => {
-                    if p == Percent(0.0) {
+                    if p == Percent(0) {
                         debug!("WORKER {}: Asked to stop.", num);
+                        debug!("WORKER {}: Waiting for load message", num);
                         // The worker should be stopped. Block and wait for the next message.
                         match rx.recv() {
                             Err(_) => {
@@ -43,6 +45,7 @@ pub fn start(num: u64, rx: Receiver<Message>) {
                     let elapsed = start_t.elapsed().as_secs_f32();
                     let decimal_p = p.decimal();
                     let sleeping_time = elapsed * (1.0 - decimal_p) / decimal_p;
+                    // We assume that useless work takes 100% of CPU and sleep takes 0%.
                     std::thread::sleep(std::time::Duration::from_secs_f32(sleeping_time));
                 }
                 _ => {
@@ -60,6 +63,7 @@ pub fn start(num: u64, rx: Receiver<Message>) {
                 }
                 Ok(l) => {
                     load = l;
+                    debug!("WORKER {0}: Got new message Ok({1:?}).", num, l);
                 }
             }
         }
