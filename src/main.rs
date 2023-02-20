@@ -110,7 +110,10 @@ fn main() {
             let current_load = Percent::from(sys.global_cpu_info().cpu_usage());
             debug!("Current system load is {current_load}.");
             if willing - cli.epsilon <= current_load && current_load <= willing + cli.epsilon {
-                debug!("Desired load reached.");
+                debug!(
+                    "Desired load reached, we wanted {0}, we got {1}.",
+                    willing, current_load
+                );
                 break;
             }
 
@@ -121,6 +124,9 @@ fn main() {
             } else {
                 debug!("Load is too high, workers load must be decreased.");
                 workers_load = workers_load - cli.step;
+            }
+            if workers_load == willing {
+                debug!("Asking workers to do exactly {} load.", willing);
             }
             let load_msg = Message::Load(workers_load);
             senders.iter().enumerate().for_each(|(num, tx)| {
