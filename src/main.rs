@@ -118,7 +118,7 @@ fn main() {
             }
 
             if current_load < willing {
-                debug!("Load is to small, workers load must be increased.");
+                debug!("Load is too small, workers load must be increased.");
                 // We do not ask workers to generate more load than we want to get.
                 workers_load = min(willing, workers_load + cli.step);
             } else {
