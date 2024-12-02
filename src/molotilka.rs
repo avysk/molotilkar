@@ -9,7 +9,7 @@ use crate::{message::Message, percent::Percent};
 pub fn start(num: usize, rx: Receiver<Message>) {
     debug!("WORKER {}: Created.", num);
     let res = rx.recv();
-    let msg = res.expect("CHannel was closed before the thread managed to start.");
+    let msg = res.expect("Channel was closed before the thread managed to start.");
     if !(msg == Message::Start) {
         panic!("Programming error. Received non-Start message.");
     }
